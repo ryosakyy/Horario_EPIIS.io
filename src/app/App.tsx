@@ -289,6 +289,7 @@ function Constructor() {
   }, [usuario]);
 
   const [dialogMovil, setDialogMovil] = useState<'exportar' | 'compartir' | 'admin' | 'horarios' | null>(null);
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
 
   return (
     <div className="min-h-screen bg-background selection:bg-primary/15 selection:text-primary">
@@ -343,57 +344,81 @@ function Constructor() {
               <BotonAuth />
             </div>
 
-            {/* Menú tres puntos en móvil */}
-            <div className="flex sm:hidden items-center gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+            {/* Menú en móvil - Sheet lateral */}
+            <div className="flex sm:hidden items-center">
+              <Sheet open={menuMovilAbierto} onOpenChange={setMenuMovilAbierto}>
+                <SheetTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                     <MoreVertical className="size-4" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  {usuario && (
-                    <DropdownMenuLabel className="text-[11px] text-muted-foreground font-normal truncate">
-                      {usuario.email}
-                    </DropdownMenuLabel>
-                  )}
-                  {usuario && <DropdownMenuSeparator />}
-                  <DropdownMenuItem onSelect={() => setDialogMovil('exportar')}>
-                    <Download className="size-4 mr-2" /> Exportar horario
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setDialogMovil('compartir')}>
-                    <Share2 className="size-4 mr-2" /> Compartir horario
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setDialogMovil('admin')}>
-                    <Building2 className="size-4 mr-2" /> Panel administrativo
-                  </DropdownMenuItem>
-                  {usuario && (
-                    <DropdownMenuItem onSelect={() => setDialogMovil('horarios')}>
-                      <History className="size-4 mr-2" /> Mis horarios
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  {!usuario && (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <Link to="/login" className="flex items-center gap-2 cursor-pointer">
-                          <User className="size-4" /> Ingresar
+                </SheetTrigger>
+                <SheetContent side="right" className="w-64 p-0">
+                  <SheetHeader className="px-4 pt-5 pb-3 border-b">
+                    <SheetTitle className="text-sm font-semibold">
+                      {usuario ? usuario.email : "Menú"}
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-1 p-2">
+                    <button
+                      type="button"
+                      className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm text-left hover:bg-accent transition-colors"
+                      onClick={() => { setMenuMovilAbierto(false); setTimeout(() => setDialogMovil('exportar'), 100); }}
+                    >
+                      <Download className="size-4 text-muted-foreground" /> Exportar horario
+                    </button>
+                    <button
+                      type="button"
+                      className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm text-left hover:bg-accent transition-colors"
+                      onClick={() => { setMenuMovilAbierto(false); setTimeout(() => setDialogMovil('compartir'), 100); }}
+                    >
+                      <Share2 className="size-4 text-muted-foreground" /> Compartir horario
+                    </button>
+                    <button
+                      type="button"
+                      className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm text-left hover:bg-accent transition-colors"
+                      onClick={() => { setMenuMovilAbierto(false); setTimeout(() => setDialogMovil('admin'), 100); }}
+                    >
+                      <Building2 className="size-4 text-muted-foreground" /> Panel administrativo
+                    </button>
+                    {usuario && (
+                      <button
+                        type="button"
+                        className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm text-left hover:bg-accent transition-colors"
+                        onClick={() => { setMenuMovilAbierto(false); setTimeout(() => setDialogMovil('horarios'), 100); }}
+                      >
+                        <History className="size-4 text-muted-foreground" /> Mis horarios
+                      </button>
+                    )}
+                    <div className="border-t my-1" />
+                    {!usuario ? (
+                      <>
+                        <Link
+                          to="/login"
+                          className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm hover:bg-accent transition-colors"
+                          onClick={() => setMenuMovilAbierto(false)}
+                        >
+                          <User className="size-4 text-muted-foreground" /> Ingresar
                         </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/registro" className="flex items-center gap-2 cursor-pointer">
+                        <Link
+                          to="/registro"
+                          className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+                          onClick={() => setMenuMovilAbierto(false)}
+                        >
                           <GraduationCap className="size-4" /> Registrarse
                         </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  {usuario && (
-                    <DropdownMenuItem onSelect={() => { cerrarSesion(); navigate("/"); }}>
-                      <LogOut className="size-4 mr-2" /> Cerrar sesión
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm text-left text-destructive hover:bg-destructive/10 transition-colors"
+                        onClick={() => { setMenuMovilAbierto(false); cerrarSesion(); navigate("/"); }}
+                      >
+                        <LogOut className="size-4" /> Cerrar sesión
+                      </button>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
