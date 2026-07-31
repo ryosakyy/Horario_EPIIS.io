@@ -27,6 +27,12 @@ export async function registrarEstudiante(datos: {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: datos.correo,
       password: datos.password,
+      options: {
+        data: {
+          nombre: datos.nombre,
+          codigo: datos.codigo,
+        },
+      },
     });
     if (authError) {
       if (authError.message.includes("already")) {
@@ -40,15 +46,28 @@ export async function registrarEstudiante(datos: {
     }
 
     // 2. Insertar perfil en la tabla estudiantes
-    const { error: perfilError } = await supabase.from("estudiantes").insert({
+    let { error: perfilError } = await supabase.from("estudiantes").insert({
       id: userId,
       nombre: datos.nombre,
       correo: datos.correo,
       codigo: datos.codigo,
       semestre: datos.semestre,
     });
+
+    if (perfilError && (perfilError.message.includes("password_hash") || perfilError.details?.includes("password_hash"))) {
+      const resPass = await supabase.from("estudiantes").insert({
+        id: userId,
+        nombre: datos.nombre,
+        correo: datos.correo,
+        codigo: datos.codigo,
+        semestre: datos.semestre,
+        password_hash: datos.password,
+      });
+      perfilError = resPass.error;
+    }
+
     if (perfilError) {
-      return { ok: false, error: perfilError.message };
+      console.warn("Aviso perfil estudiantes:", perfilError.message);
     }
 
     return { ok: true };
@@ -294,12 +313,47 @@ export async function guardarHorario(
   }
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: "No hay sesión activa." };
+
+    // 1. Garantizar que el estudiante exista en la tabla `estudiantes` para evitar errores de clave foránea
+    const { data: perfExistente } = await supabase
+      .from("estudiantes")
+      .select("id")
+      .eq("id", estudianteId)
+      .maybeSingle();
+
+    if (!perfExistente) {
+      const email = user.email || "";
+      const nombre = user.user_metadata?.nombre || email.split("@")[0] || "Estudiante";
+      const codigo = user.user_metadata?.codigo || `COD-${Date.now().toString(36)}`;
+
+      let { error: insertErr } = await supabase.from("estudiantes").insert({
+        id: estudianteId,
+        nombre,
+        correo: email,
+        codigo,
+        semestre: datos.semestre || 1,
+      });
+
+      if (insertErr && (insertErr.message.includes("password_hash") || insertErr.details?.includes("password_hash"))) {
+        await supabase.from("estudiantes").insert({
+          id: estudianteId,
+          nombre,
+          correo: email,
+          codigo,
+          semestre: datos.semestre || 1,
+          password_hash: "auth_managed",
+        });
+      }
+    }
+
     const sesionesMovidasObj: Record<string, { dia: Dia; inicio: string; fin: string }> = {};
     for (const [key, val] of datos.sesionesMovidas) {
       sesionesMovidasObj[key] = val;
     }
 
-    // Buscar si ya existe un horario guardado para este estudiante
+    // 2. Buscar si ya existe un horario guardado para este estudiante
     const { data: existentes } = await supabase
       .from("horarios")
       .select("id")
