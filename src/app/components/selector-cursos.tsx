@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useRef } from "react";
 import { useDrag } from "react-dnd";
 import { toast } from "sonner";
 import {
@@ -20,7 +20,7 @@ import {
 import { colorDeCurso } from "../data/colores";
 import { cruzaConAlguno } from "./detector-cruces";
 import { DND_CURSO } from "../data/actividades";
-import { BookOpen, AlertCircle, GripVertical } from "lucide-react";
+import { BookOpen, AlertCircle, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
 
 interface CursoItemProps {
   curso: Curso;
@@ -132,6 +132,13 @@ export function SelectorCursos({
     () => seleccionados.map(cursoPorId).filter((c): c is Curso => Boolean(c)),
     [seleccionados]
   );
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const hacerScroll = (direccion: "arriba" | "abajo") => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ top: direccion === "abajo" ? 250 : -250, behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
@@ -163,8 +170,13 @@ export function SelectorCursos({
         </Badge>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-card p-2 space-y-1.5 shadow-2xs focus:outline-none scrollbar-thin scrollbar-thumb-muted-foreground/30 hover:scrollbar-thumb-muted-foreground/50">
-        {cursosSemestre.map((curso) => (
+      <div className="relative min-h-0 flex-1 flex flex-col">
+        {/* Contenedor con scroll */}
+        <div
+          ref={scrollRef}
+          className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-card p-2 space-y-1.5 shadow-2xs focus:outline-none scrollbar-thin scrollbar-thumb-muted-foreground/30 hover:scrollbar-thumb-muted-foreground/50"
+        >
+          {cursosSemestre.map((curso) => (
           <CursoItem
             key={curso.id}
             curso={curso}
@@ -178,6 +190,29 @@ export function SelectorCursos({
         {cursosSemestre.length === 0 && (
           <div className="text-xs text-muted-foreground p-6 text-center">
             Sin cursos registrados para este semestre.
+          </div>
+        )}
+        </div>
+
+        {/* Flechas de scroll manual (solo visibles en móviles si hay contenido) */}
+        {cursosSemestre.length > 0 && (
+          <div className="absolute right-0 bottom-4 flex flex-col gap-1.5 pr-2 pointer-events-none md:hidden">
+            <button
+              type="button"
+              onClick={() => hacerScroll("arriba")}
+              className="pointer-events-auto flex size-8 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-md backdrop-blur-sm transition-transform active:scale-95"
+              title="Subir"
+            >
+              <ChevronUp className="size-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => hacerScroll("abajo")}
+              className="pointer-events-auto flex size-8 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-md backdrop-blur-sm transition-transform active:scale-95"
+              title="Bajar"
+            >
+              <ChevronDown className="size-5" />
+            </button>
           </div>
         )}
       </div>
