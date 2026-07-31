@@ -1,3 +1,4 @@
+import React from "react";
 import { Cloud, CloudOff, History, RotateCcw } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -17,6 +18,7 @@ interface MisHorariosProps {
   onForzarGuardado: () => void;
   onRecargar: () => void;
   usuarioEmail?: string;
+  trigger?: React.ReactNode;
 }
 
 export function MisHorarios({
@@ -27,14 +29,17 @@ export function MisHorarios({
   onForzarGuardado,
   onRecargar,
   usuarioEmail,
+  trigger,
 }: MisHorariosProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-          <History className="size-3.5" />
-          <span className="hidden sm:inline">Mis horarios</span>
-        </Button>
+        {trigger || (
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+            <History className="size-3.5" />
+            <span className="hidden sm:inline">Mis horarios</span>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

@@ -17,9 +17,10 @@ import { urlCompartir } from "../lib/compartir";
 
 interface CompartirDialogProps {
   seleccionados: string[];
+  trigger?: React.ReactNode;
 }
 
-export function CompartirDialog({ seleccionados }: CompartirDialogProps) {
+export function CompartirDialog({ seleccionados, trigger }: CompartirDialogProps) {
   const [copiado, setCopiado] = useState(false);
   const isMobile = useIsMobile();
   const url = urlCompartir(seleccionados);
@@ -39,9 +40,12 @@ export function CompartirDialog({ seleccionados }: CompartirDialogProps) {
 
   return (
     <Dialog>
-      <DialogTrigger className={cn(buttonVariants({ variant: "default", size: "sm" }), "gap-1.5")}>
-        <Share2 className="size-4" />
-        <span className="hidden sm:inline">Compartir</span>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button size="sm" variant="outline" className="gap-1.5 border-primary/20 bg-card shadow-sm hover:bg-accent">
+            <Share2 className="size-4" /> <span className="hidden sm:inline">Compartir</span>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

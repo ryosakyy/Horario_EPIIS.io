@@ -54,12 +54,16 @@ const BENEFICIOS = [
   },
 ];
 
-export function BeneficiosAdmin({ cursos, actividades }: BeneficiosAdminProps) {
+export function BeneficiosAdmin({ cursos, actividades, trigger }: BeneficiosAdminProps) {
   return (
     <Dialog>
-      <DialogTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}>
-        <Building2 className="size-4" />
-        <span className="hidden sm:inline">Panel administrativo</span>
+      <DialogTrigger asChild>
+        {trigger || (
+          <button className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}>
+            <Building2 className="size-4" />
+            <span className="hidden sm:inline">Panel administrativo</span>
+          </button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>

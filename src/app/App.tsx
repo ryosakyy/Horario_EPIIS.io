@@ -5,12 +5,17 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
 import {
   AlertTriangle,
+  Building2,
   CalendarDays,
   CheckCircle2,
+  Download,
   GraduationCap,
   Gamepad2,
+  History,
   LogOut,
   Menu,
+  MoreVertical,
+  Share2,
   ShieldCheck,
   Trash2,
   User,
@@ -20,6 +25,14 @@ import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "./components/ui/toggle-group";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./components/ui/dropdown-menu";
 import { SelectorCursos } from "./components/selector-cursos";
 import { CatalogoActividades } from "./components/catalogo-actividades";
 import { ModalDuracion } from "./components/modal-duracion";
@@ -292,6 +305,7 @@ function Constructor() {
             </div>
           </div>
           <div className="flex items-center gap-0.5 sm:gap-2">
+            {/* Estado de guardado */}
             <div className="flex items-center gap-1 text-[11px] text-muted-foreground sm:gap-1.5">
               {nubeEstado === "cargando" ? (
                 <span className="inline-block size-2.5 animate-pulse rounded-full bg-amber-400 sm:size-3.5" title="Cargando horario..." />
@@ -306,22 +320,86 @@ function Constructor() {
               )}
               <span className="hidden xl:block">{nubeEstado === "cargando" ? "Cargando horario..." : nubeEstado === "guardando" ? "Guardando..." : nubeEstado === "ok" ? "Guardado en la nube" : nubeEstado === "error" ? "Error al guardar" : "Solo en este dispositivo"}</span>
             </div>
-            <ExportarDialog cursos={cursosConMovimientos} actividades={actividades} />
-            <BeneficiosAdmin cursos={cursosConMovimientos} actividades={actividades} />
-            <CompartirDialog seleccionados={seleccionados} />
-            {usuario && (
-              <MisHorarios
-                nubeEstado={nubeEstado}
-                semestre={semestre}
-                cantidadCursos={cursos.length}
-                cantidadActividades={actividades.length}
-                onForzarGuardado={forzarGuardado}
-                onRecargar={recargarHorario}
-                usuarioEmail={usuario.email}
-              />
-            )}
-            <div className="block">
+
+            {/* Botones completos en escritorio */}
+            <div className="hidden sm:flex items-center gap-1.5">
+              <ExportarDialog cursos={cursosConMovimientos} actividades={actividades} />
+              <BeneficiosAdmin cursos={cursosConMovimientos} actividades={actividades} />
+              <CompartirDialog seleccionados={seleccionados} />
+              {usuario && (
+                <MisHorarios
+                  nubeEstado={nubeEstado}
+                  semestre={semestre}
+                  cantidadCursos={cursos.length}
+                  cantidadActividades={actividades.length}
+                  onForzarGuardado={forzarGuardado}
+                  onRecargar={recargarHorario}
+                  usuarioEmail={usuario.email}
+                />
+              )}
               <BotonAuth />
+            </div>
+
+            {/* Menú tres puntos en móvil */}
+            <div className="flex sm:hidden items-center gap-1">
+              <BotonAuth />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreVertical className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  {usuario && (
+                    <DropdownMenuLabel className="text-[11px] text-muted-foreground font-normal truncate">
+                      {usuario.email}
+                    </DropdownMenuLabel>
+                  )}
+                  {usuario && <DropdownMenuSeparator />}
+                  <ExportarDialog
+                    cursos={cursosConMovimientos}
+                    actividades={actividades}
+                    trigger={
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Download className="size-4 mr-2" /> Exportar horario
+                      </DropdownMenuItem>
+                    }
+                  />
+                  <CompartirDialog
+                    seleccionados={seleccionados}
+                    trigger={
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Share2 className="size-4 mr-2" /> Compartir horario
+                      </DropdownMenuItem>
+                    }
+                  />
+                  <BeneficiosAdmin
+                    cursos={cursosConMovimientos}
+                    actividades={actividades}
+                    trigger={
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Building2 className="size-4 mr-2" /> Panel administrativo
+                      </DropdownMenuItem>
+                    }
+                  />
+                  {usuario && (
+                    <MisHorarios
+                      nubeEstado={nubeEstado}
+                      semestre={semestre}
+                      cantidadCursos={cursos.length}
+                      cantidadActividades={actividades.length}
+                      onForzarGuardado={forzarGuardado}
+                      onRecargar={recargarHorario}
+                      usuarioEmail={usuario.email}
+                      trigger={
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <History className="size-4 mr-2" /> Mis horarios
+                        </DropdownMenuItem>
+                      }
+                    />
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
