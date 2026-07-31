@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BrowserRouter, Route, Routes, Link, useNavigate } from "react-router";
+import { BrowserRouter, Route, Routes, Link, useNavigate, Navigate } from "react-router";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
@@ -679,6 +679,8 @@ export default function App() {
                   <Route path="reportes" element={<ReportesAcademicos />} />
                 </Route>
               </Route>
+              <Route path="/login/login" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             <Toaster position="bottom-center" />
           </AdminProvider>
