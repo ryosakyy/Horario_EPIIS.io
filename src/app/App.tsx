@@ -113,7 +113,7 @@ function BotonAuth() {
       <Button variant="ghost" size="sm" className="gap-1 text-xs sm:gap-1.5" asChild>
         <Link to="/login">
           <User className="size-3.5" />
-          <span className="hidden sm:inline">Ingresar</span>
+          <span>Ingresar</span>
         </Link>
       </Button>
       <Button variant="default" size="sm" className="gap-1 text-xs sm:gap-1.5" asChild>
@@ -140,7 +140,8 @@ function Constructor() {
   const [modal, setModal] = useState<{ def: DefinicionActividad; dia?: Dia; minuto?: number } | null>(null);
 
   // Sincronización con Supabase (solo cuando el usuario está logueado y NO es administrador)
-  const { usuario } = useSesion();
+  const { usuario, cerrarSesion } = useSesion();
+  const navigate = useNavigate();
   const { autenticado: esAdmin } = useAdmin();
   const [nubeEstado, setNubeEstado] = useState<"local" | "cargando" | "guardando" | "ok" | "error">("local");
 
@@ -344,7 +345,6 @@ function Constructor() {
 
             {/* Menú tres puntos en móvil */}
             <div className="flex sm:hidden items-center gap-1">
-              <BotonAuth />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -370,6 +370,26 @@ function Constructor() {
                   {usuario && (
                     <DropdownMenuItem onSelect={() => setDialogMovil('horarios')}>
                       <History className="size-4 mr-2" /> Mis horarios
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  {!usuario && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/login" className="flex items-center gap-2 cursor-pointer">
+                          <User className="size-4" /> Ingresar
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/registro" className="flex items-center gap-2 cursor-pointer">
+                          <GraduationCap className="size-4" /> Registrarse
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {usuario && (
+                    <DropdownMenuItem onSelect={() => { cerrarSesion(); navigate("/"); }}>
+                      <LogOut className="size-4 mr-2" /> Cerrar sesión
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
