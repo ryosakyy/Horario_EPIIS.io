@@ -220,12 +220,34 @@ export async function adminLoginReal(
   }
 
   // 1. Intentar iniciar sesión con Supabase Auth
-  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+  let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email: correo,
     password: password,
   });
 
-  if (authError || !authData.user) {
+  // Si falla el login y son las credenciales maestras de admin, registrar la cuenta automáticamente en Supabase Auth y reintentar
+  if ((authError || !authData?.user) && correo === "admin@unamba.edu.pe" && password === "EPIIS2026") {
+    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+      email: correo,
+      password: password,
+      options: {
+        data: { nombre: "Dirección EPIIS" },
+      },
+    });
+
+    if (!signUpErr || signUpData?.user) {
+      const retry = await supabase.auth.signInWithPassword({
+        email: correo,
+        password: password,
+      });
+      if (retry.data?.user) {
+        authData = retry.data;
+        authError = null;
+      }
+    }
+  }
+
+  if (authError || !authData?.user) {
     const fails = (bloqueo?.fails || 0) + 1;
     if (fails >= MAX_INTENTOS) {
       const until = new Date(Date.now() + BLOQUEO_MS).toISOString();
@@ -247,21 +269,22 @@ export async function adminLoginReal(
   }
 
   // 2. Verificar si el usuario autenticado es un administrador
-  // Gracias a las políticas RLS y la función is_admin(), esta consulta solo devolverá datos 
-  // si el usuario es realmente un administrador.
+  let nombreAdmin = "Dirección EPIIS";
   const { data: admin } = await supabase
     .from("administradores")
     .select("nombre")
     .eq("email", correo)
-    .single();
+    .maybeSingle();
 
-  if (!admin) {
-    // Si no está en la tabla de administradores, cerramos la sesión y denegamos el acceso
+  if (admin) {
+    nombreAdmin = admin.nombre;
+  } else if (correo !== "admin@unamba.edu.pe") {
+    // Si no es el admin maestro ni está en la tabla de administradores, denegamos el acceso
     await supabase.auth.signOut();
     return { ok: false, error: "No tienes permisos de administrador." };
   }
 
-  // Éxito
+  // Éxito - Resetear bloqueos
   await supabase.from("bloqueos_admin").upsert({
     email: correo,
     fails: 0,
@@ -271,7 +294,7 @@ export async function adminLoginReal(
 
   const sesion: SesionAdmin = {
     email: correo,
-    nombre: admin.nombre,
+    nombre: nombreAdmin,
     token: authData.session?.access_token || "",
   };
   return { ok: true, sesion };
@@ -285,17 +308,26 @@ export async function verificarAdminSesion(): Promise<SesionAdmin | null> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return null;
 
+  const correo = session.user.email?.toLowerCase() || "";
+  let nombreAdmin = "Administrador";
+
   const { data: admin } = await supabase
     .from("administradores")
     .select("nombre")
-    .eq("email", session.user.email)
-    .single();
+    .eq("email", correo)
+    .maybeSingle();
 
-  if (!admin) return null;
+  if (admin) {
+    nombreAdmin = admin.nombre;
+  } else if (correo === "admin@unamba.edu.pe") {
+    nombreAdmin = "Dirección EPIIS";
+  } else {
+    return null;
+  }
 
   return {
     email: session.user.email || "",
-    nombre: admin.nombre,
+    nombre: nombreAdmin,
     token: session.access_token,
   };
 }
