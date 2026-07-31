@@ -20,7 +20,7 @@ import {
 import { colorDeCurso } from "../data/colores";
 import { cruzaConAlguno } from "./detector-cruces";
 import { DND_CURSO } from "../data/actividades";
-import { BookOpen, AlertCircle } from "lucide-react";
+import { BookOpen, AlertCircle, GripVertical } from "lucide-react";
 
 interface CursoItemProps {
   curso: Curso;
@@ -59,15 +59,24 @@ function CursoItem({ curso, marcado, cruza, onToggle, cursosSeleccionados }: Cur
 
   return (
     <div
-      ref={drag as unknown as React.Ref<HTMLDivElement>}
-      className={`rounded-lg border transition-all duration-150 ${
+      className={`relative group rounded-lg border transition-all duration-150 ${
         marcado
           ? "border-primary/40 bg-primary/5 shadow-2xs"
           : "border-border/60 hover:border-primary/30 hover:bg-muted/40"
       } ${isDragging ? "opacity-40 scale-[0.98]" : ""}`}
-      style={{ cursor: marcado ? "default" : "grab" }}
     >
-      <label className="flex items-start gap-2.5 p-2.5 cursor-pointer select-none">
+      {/* Drag Handle */}
+      {!marcado && (
+        <div
+          ref={drag as unknown as React.Ref<HTMLDivElement>}
+          className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-8 cursor-grab active:cursor-grabbing hover:bg-muted/50 rounded-r-lg border-l border-transparent hover:border-border/60 transition-colors"
+          title="Arrastra este curso al horario"
+        >
+          <GripVertical className="size-4 text-muted-foreground/40 group-hover:text-muted-foreground" />
+        </div>
+      )}
+
+      <label className={`flex items-start gap-2.5 p-2.5 cursor-pointer select-none ${!marcado ? "pr-8" : ""}`}>
         <Checkbox
           checked={marcado}
           onCheckedChange={(v) => manejarToggle(Boolean(v))}
