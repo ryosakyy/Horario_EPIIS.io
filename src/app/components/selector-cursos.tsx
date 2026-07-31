@@ -126,7 +126,7 @@ export function SelectorCursos({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <div>
+      <div className="shrink-0">
         <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
           <BookOpen className="size-3.5 text-primary" />
           <span>Semestre Académico</span>
@@ -145,7 +145,7 @@ export function SelectorCursos({
         </Select>
       </div>
 
-      <div className="flex items-center justify-between text-xs">
+      <div className="shrink-0 flex items-center justify-between text-xs">
         <span className="font-semibold text-muted-foreground">
           Asignaturas disponibles
         </span>
