@@ -170,37 +170,37 @@ export function SelectorCursos({
         </Badge>
       </div>
 
-      <div className="relative min-h-0 flex-1 flex flex-col">
+      {/* Layout: lista + flechas laterales */}
+      <div className="relative min-h-0 flex-1 flex flex-row gap-1.5">
         {/* Contenedor con scroll */}
         <div
           ref={scrollRef}
-          className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-card p-2 space-y-1.5 shadow-2xs focus:outline-none scrollbar-thin scrollbar-thumb-muted-foreground/30 hover:scrollbar-thumb-muted-foreground/50"
+          className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-card p-2 space-y-1.5 shadow-2xs focus:outline-none"
         >
           {cursosSemestre.map((curso) => (
-          <CursoItem
-            key={curso.id}
-            curso={curso}
-            marcado={seleccionados.includes(curso.id)}
-            cruza={!seleccionados.includes(curso.id) && cruzaConAlguno(curso, cursosSeleccionados.filter((c) => c.id !== curso.id))}
-            onToggle={onToggle}
-            cursosSeleccionados={cursosSeleccionados}
-          />
-        ))}
-
-        {cursosSemestre.length === 0 && (
-          <div className="text-xs text-muted-foreground p-6 text-center">
-            Sin cursos registrados para este semestre.
-          </div>
-        )}
+            <CursoItem
+              key={curso.id}
+              curso={curso}
+              marcado={seleccionados.includes(curso.id)}
+              cruza={!seleccionados.includes(curso.id) && cruzaConAlguno(curso, cursosSeleccionados.filter((c) => c.id !== curso.id))}
+              onToggle={onToggle}
+              cursosSeleccionados={cursosSeleccionados}
+            />
+          ))}
+          {cursosSemestre.length === 0 && (
+            <div className="text-xs text-muted-foreground p-6 text-center">
+              Sin cursos registrados para este semestre.
+            </div>
+          )}
         </div>
 
-        {/* Flechas de scroll manual (solo visibles en móviles si hay contenido) */}
+        {/* Flechas laterales de scroll - siempre visibles */}
         {cursosSemestre.length > 0 && (
-          <div className="absolute right-0 bottom-4 flex flex-col gap-1.5 pr-2 pointer-events-none md:hidden">
+          <div className="flex flex-col justify-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => hacerScroll("arriba")}
-              className="pointer-events-auto flex size-8 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-md backdrop-blur-sm transition-transform active:scale-95"
+              className="flex h-12 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary active:scale-95"
               title="Subir"
             >
               <ChevronUp className="size-5" />
@@ -208,7 +208,7 @@ export function SelectorCursos({
             <button
               type="button"
               onClick={() => hacerScroll("abajo")}
-              className="pointer-events-auto flex size-8 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-md backdrop-blur-sm transition-transform active:scale-95"
+              className="flex h-12 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary active:scale-95"
               title="Bajar"
             >
               <ChevronDown className="size-5" />
