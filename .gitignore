@@ -27,3 +27,7 @@ dist-ssr
 .env
 .env.production
 .env.staging
+
+# Temporary scripts (contain secrets)
+*.sql
+*.cjs

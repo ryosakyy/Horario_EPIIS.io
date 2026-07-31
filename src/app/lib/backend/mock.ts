@@ -57,8 +57,8 @@ function generarEstudiantes(): EstudianteResumen[] {
   for (let i = 0; i < total; i++) {
     const nombre = `${NOMBRES[Math.floor(rand() * NOMBRES.length)]} ${APELLIDOS[Math.floor(rand() * APELLIDOS.length)]}`;
     const semestre = 1 + Math.floor(rand() * 10);
-    // 91% tienen horario armado.
-    const tieneHorario = rand() < 0.91;
+    // Solo los primeros 10 tienen horario armado.
+    const tieneHorario = i < 10;
     const diasRegistro = Math.floor(rand() * 60); // registrado en los últimos 2 meses
     const fechaRegistro = new Date(ahora - diasRegistro * 86400000).toISOString();
     const horasUltima = Math.floor(rand() * 72); // última conexión en los últimos 3 días
@@ -153,13 +153,13 @@ export async function getMetricas(): Promise<Metricas> {
   const sinHorario = usuariosRegistrados - conHorario;
   const tasaExito = Math.round((conHorario / usuariosRegistrados) * 100);
 
-  // Visitas de la semana con pico los lunes (revisar clases al empezar la semana).
+  // Visitas de la semana entre 8 y 15 por día.
   const rand = mulberry32(99);
   const dias = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-  const base = [140, 118, 96, 104, 88, 42, 30];
+  const base = [12, 9, 14, 11, 15, 8, 10];
   const visitasSemana = dias.map((dia, i) => ({
     dia,
-    visitas: Math.max(0, Math.round(base[i] + (rand() - 0.5) * 24)),
+    visitas: base[i],
   }));
   const visitasHoy = visitasSemana[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1].visitas;
 
