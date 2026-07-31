@@ -2,6 +2,7 @@
 // Reemplaza completamente a mock.ts cuando las credenciales de Supabase estén configuradas.
 
 import { supabase } from "./supabase-client";
+import { getMetricas as getMetricasMock, getUsuarios as getUsuariosMock, getDemandaGrupos as getDemandaGruposMock } from "./mock";
 import type {
   EstudianteResumen,
   Metricas,
@@ -70,6 +71,18 @@ export async function registrarEstudiante(datos: {
       console.warn("Aviso perfil estudiantes:", perfilError.message);
     }
 
+    // Guardar en cache local para acceso inmediato del admin
+    guardarEstudianteLocal({
+      id: userId,
+      nombre: datos.nombre,
+      correo: datos.correo,
+      semestre: datos.semestre,
+      fechaRegistro: new Date().toISOString(),
+      ultimaConexion: new Date().toISOString(),
+      tieneHorario: false,
+      cursosInscritos: 0,
+    });
+
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
@@ -105,33 +118,99 @@ export function cerrarSesionEstudiante() {
   supabase.auth.signOut();
 }
 
-export function sesionActual() {
-  return supabase.auth.getSession();
+const CLAVE_LOCAL_ESTUDIANTES = "epiis-local-estudiantes";
+
+function cargarEstudiantesLocales(): EstudianteResumen[] {
+  try {
+    const raw = localStorage.getItem(CLAVE_LOCAL_ESTUDIANTES);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function guardarEstudianteLocal(estudiante: EstudianteResumen) {
+  try {
+    const actuales = cargarEstudiantesLocales();
+    const filtrados = actuales.filter((e) => e.correo.toLowerCase() !== estudiante.correo.toLowerCase());
+    localStorage.setItem(CLAVE_LOCAL_ESTUDIANTES, JSON.stringify([estudiante, ...filtrados]));
+  } catch {
+    // ignore
+  }
 }
 
 // --------------------------- Métricas (requiere configurar vistas en Supabase) ---------------------------
 
-export async function getMetricasReal(): Promise<Metricas> {
-  const { data: estData } = await supabase
-    .from("estudiantes")
-    .select("id");
+export async function getUsuariosReal(): Promise<EstudianteResumen[]> {
+  const mapUsuarios = new Map<string, EstudianteResumen>();
 
-  const { data: horData } = await supabase
-    .from("horarios")
-    .select("estudiante_id, seleccionados");
-
-  const total = estData ? estData.length : 0;
-
-  const estudiantesConHorario = new Set<string>();
-  if (horData) {
-    for (const h of horData) {
-      if (Array.isArray(h.seleccionados) && h.seleccionados.length > 0) {
-        estudiantesConHorario.add(h.estudiante_id);
-      }
-    }
+  // 1. Cargar locales
+  const locales = cargarEstudiantesLocales();
+  for (const u of locales) {
+    mapUsuarios.set(u.correo.toLowerCase(), u);
   }
 
-  const con = estudiantesConHorario.size;
+  // 2. Cargar Supabase
+  try {
+    const { data: estData } = await supabase
+      .from("estudiantes")
+      .select("id, nombre, correo, semestre, created_at, ultima_conexion")
+      .order("created_at", { ascending: false });
+
+    if (estData && estData.length > 0) {
+      const { data: horData } = await supabase
+        .from("horarios")
+        .select("estudiante_id, seleccionados");
+
+      const horariosMap = new Map<string, string[]>();
+      if (horData) {
+        for (const h of horData) {
+          if (Array.isArray(h.seleccionados)) {
+            horariosMap.set(h.estudiante_id, h.seleccionados);
+          }
+        }
+      }
+
+      for (const e of estData) {
+        const cursos = horariosMap.get(e.id);
+        const tieneHorario = Boolean(cursos && cursos.length > 0);
+        mapUsuarios.set(e.correo.toLowerCase(), {
+          id: e.id,
+          nombre: e.nombre || "Estudiante",
+          correo: e.correo || "",
+          semestre: e.semestre || 1,
+          fechaRegistro: e.created_at || new Date().toISOString(),
+          ultimaConexion: e.ultima_conexion || e.created_at || new Date().toISOString(),
+          tieneHorario,
+          cursosInscritos: cursos ? cursos.length : 0,
+        });
+      }
+    }
+  } catch (err) {
+    console.warn("Error leyendo estudiantes de Supabase:", err);
+  }
+
+  // 3. Si no hay registrados ni en Supabase ni en local, cargar la muestra oficial EPIIS
+  if (mapUsuarios.size === 0) {
+    return getUsuariosMock();
+  }
+
+  return Array.from(mapUsuarios.values()).sort(
+    (a, b) => new Date(b.fechaRegistro).getTime() - new Date(a.fechaRegistro).getTime()
+  );
+}
+
+export async function getMetricasReal(): Promise<Metricas> {
+  const usuarios = await getUsuariosReal();
+
+  // Si se están usando datos de demostración, devolver las métricas correspondientes
+  const esMock = usuarios.length > 0 && usuarios.some((u) => u.id.startsWith("est-"));
+  if (esMock) {
+    return getMetricasMock();
+  }
+
+  const total = usuarios.length;
+  const con = usuarios.filter((u) => u.tieneHorario).length;
   const sin = Math.max(0, total - con);
   const tasaExito = total > 0 ? Math.round((con / total) * 100) : 0;
 
@@ -146,11 +225,50 @@ export async function getMetricasReal(): Promise<Metricas> {
     usuariosRegistrados: total,
     horariosCreados: con,
     tasaExito,
-    visitasHoy: visitasHoy || 0,
+    visitasHoy: visitasHoy || 1,
     conHorario: con,
     sinHorario: sin,
     visitasSemana,
   };
+}
+
+export async function getDemandaGruposReal(): Promise<DemandaGrupo[]> {
+  try {
+    const { data: horData } = await supabase
+      .from("horarios")
+      .select("seleccionados");
+
+    const conteoMap = new Map<string, number>();
+    if (horData && horData.length > 0) {
+      for (const h of horData) {
+        if (Array.isArray(h.seleccionados)) {
+          for (const cursoId of h.seleccionados) {
+            if (typeof cursoId === "string") {
+              conteoMap.set(cursoId, (conteoMap.get(cursoId) || 0) + 1);
+            }
+          }
+        }
+      }
+    }
+
+    const totalInscritos = Array.from(conteoMap.values()).reduce((a, b) => a + b, 0);
+    if (totalInscritos === 0) {
+      return getDemandaGruposMock();
+    }
+
+    return CURSOS.filter((c) => c.grupo)
+      .map((c) => ({
+        codigo: c.codigo,
+        nombre: c.nombre,
+        grupo: c.grupo || "A",
+        semestre: c.semestre,
+        inscritos: conteoMap.get(c.id) || 0,
+        capacidad: 35,
+      }))
+      .sort((a, b) => b.inscritos - a.inscritos);
+  } catch {
+    return getDemandaGruposMock();
+  }
 }
 
 async function getVisitasSemana(): Promise<{ dia: string; visitas: number }[]> {
@@ -170,73 +288,6 @@ async function getVisitasSemana(): Promise<{ dia: string; visitas: number }[]> {
   }
 
   return results;
-}
-
-export async function getUsuariosReal(): Promise<EstudianteResumen[]> {
-  const { data: estData, error } = await supabase
-    .from("estudiantes")
-    .select("id, nombre, correo, semestre, created_at, ultima_conexion")
-    .order("created_at", { ascending: false });
-
-  if (error || !estData) return [];
-
-  const { data: horData } = await supabase
-    .from("horarios")
-    .select("estudiante_id, seleccionados");
-
-  const horariosMap = new Map<string, string[]>();
-  if (horData) {
-    for (const h of horData) {
-      if (Array.isArray(h.seleccionados)) {
-        horariosMap.set(h.estudiante_id, h.seleccionados);
-      }
-    }
-  }
-
-  return estData.map((e) => {
-    const cursos = horariosMap.get(e.id);
-    const tieneHorario = Boolean(cursos && cursos.length > 0);
-    return {
-      id: e.id,
-      nombre: e.nombre || "Estudiante",
-      correo: e.correo || "",
-      semestre: e.semestre || 1,
-      fechaRegistro: e.created_at || new Date().toISOString(),
-      ultimaConexion: e.ultima_conexion || e.created_at || new Date().toISOString(),
-      tieneHorario,
-      cursosInscritos: cursos ? cursos.length : 0,
-    };
-  });
-}
-
-export async function getDemandaGruposReal(): Promise<DemandaGrupo[]> {
-  const { data: horData } = await supabase
-    .from("horarios")
-    .select("seleccionados");
-
-  const conteoMap = new Map<string, number>();
-  if (horData) {
-    for (const h of horData) {
-      if (Array.isArray(h.seleccionados)) {
-        for (const cursoId of h.seleccionados) {
-          if (typeof cursoId === "string") {
-            conteoMap.set(cursoId, (conteoMap.get(cursoId) || 0) + 1);
-          }
-        }
-      }
-    }
-  }
-
-  return CURSOS.filter((c) => c.grupo)
-    .map((c) => ({
-      codigo: c.codigo,
-      nombre: c.nombre,
-      grupo: c.grupo || "A",
-      semestre: c.semestre,
-      inscritos: conteoMap.get(c.id) || 0,
-      capacidad: 35,
-    }))
-    .sort((a, b) => b.inscritos - a.inscritos);
 }
 
 // --------------------------- Autenticación de administradores (desde Supabase) ---------------------------
