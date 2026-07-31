@@ -112,17 +112,27 @@ export function sesionActual() {
 // --------------------------- Métricas (requiere configurar vistas en Supabase) ---------------------------
 
 export async function getMetricasReal(): Promise<Metricas> {
-  const { count: usuariosRegistrados } = await supabase
+  const { data: estData } = await supabase
     .from("estudiantes")
-    .select("*", { count: "exact", head: true });
+    .select("id");
 
-  const { count: conHorario } = await supabase
+  const { data: horData } = await supabase
     .from("horarios")
-    .select("estudiante_id", { count: "exact", head: true });
+    .select("estudiante_id, seleccionados");
 
-  const total = usuariosRegistrados || 0;
-  const con = conHorario || 0;
-  const sin = total - con;
+  const total = estData ? estData.length : 0;
+
+  const estudiantesConHorario = new Set<string>();
+  if (horData) {
+    for (const h of horData) {
+      if (Array.isArray(h.seleccionados) && h.seleccionados.length > 0) {
+        estudiantesConHorario.add(h.estudiante_id);
+      }
+    }
+  }
+
+  const con = estudiantesConHorario.size;
+  const sin = Math.max(0, total - con);
   const tasaExito = total > 0 ? Math.round((con / total) * 100) : 0;
 
   const { count: visitasHoy } = await supabase
@@ -163,34 +173,70 @@ async function getVisitasSemana(): Promise<{ dia: string; visitas: number }[]> {
 }
 
 export async function getUsuariosReal(): Promise<EstudianteResumen[]> {
-  const { data, error } = await supabase
+  const { data: estData, error } = await supabase
     .from("estudiantes")
-    .select("id, nombre, correo, semestre, created_at, ultima_conexion");
-  if (error || !data) return [];
+    .select("id, nombre, correo, semestre, created_at, ultima_conexion")
+    .order("created_at", { ascending: false });
 
-  return data.map((e) => ({
-    id: e.id,
-    nombre: e.nombre,
-    correo: e.correo,
-    semestre: e.semestre,
-    fechaRegistro: e.created_at,
-    ultimaConexion: e.ultima_conexion,
-    tieneHorario: false,
-    cursosInscritos: 0,
-  }));
+  if (error || !estData) return [];
+
+  const { data: horData } = await supabase
+    .from("horarios")
+    .select("estudiante_id, seleccionados");
+
+  const horariosMap = new Map<string, string[]>();
+  if (horData) {
+    for (const h of horData) {
+      if (Array.isArray(h.seleccionados)) {
+        horariosMap.set(h.estudiante_id, h.seleccionados);
+      }
+    }
+  }
+
+  return estData.map((e) => {
+    const cursos = horariosMap.get(e.id);
+    const tieneHorario = Boolean(cursos && cursos.length > 0);
+    return {
+      id: e.id,
+      nombre: e.nombre || "Estudiante",
+      correo: e.correo || "",
+      semestre: e.semestre || 1,
+      fechaRegistro: e.created_at || new Date().toISOString(),
+      ultimaConexion: e.ultima_conexion || e.created_at || new Date().toISOString(),
+      tieneHorario,
+      cursosInscritos: cursos ? cursos.length : 0,
+    };
+  });
 }
 
 export async function getDemandaGruposReal(): Promise<DemandaGrupo[]> {
+  const { data: horData } = await supabase
+    .from("horarios")
+    .select("seleccionados");
+
+  const conteoMap = new Map<string, number>();
+  if (horData) {
+    for (const h of horData) {
+      if (Array.isArray(h.seleccionados)) {
+        for (const cursoId of h.seleccionados) {
+          if (typeof cursoId === "string") {
+            conteoMap.set(cursoId, (conteoMap.get(cursoId) || 0) + 1);
+          }
+        }
+      }
+    }
+  }
+
   return CURSOS.filter((c) => c.grupo)
-    .slice(0, 24)
     .map((c) => ({
       codigo: c.codigo,
       nombre: c.nombre,
       grupo: c.grupo || "A",
       semestre: c.semestre,
-      inscritos: 0,
+      inscritos: conteoMap.get(c.id) || 0,
       capacidad: 35,
-    }));
+    }))
+    .sort((a, b) => b.inscritos - a.inscritos);
 }
 
 // --------------------------- Autenticación de administradores (desde Supabase) ---------------------------
