@@ -359,7 +359,7 @@ function Constructor() {
                     <Gamepad2 className="size-3" /> Tiempo libre
                   </ToggleGroupItem>
                 </ToggleGroup>
-                <div className="min-h-0 flex-1">
+                <div className="min-h-0 flex-1 flex flex-col">
                   {modo === "cursos" ? (
                     <SelectorCursos
                       semestre={semestre}
@@ -409,7 +409,7 @@ function Constructor() {
             </ToggleGroupItem>
           </ToggleGroup>
 
-          <div className="min-h-0 flex-1">
+          <div className="min-h-0 flex-1 flex flex-col">
             {modo === "cursos" ? (
               <SelectorCursos
                 semestre={semestre}
