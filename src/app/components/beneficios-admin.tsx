@@ -58,16 +58,19 @@ const BENEFICIOS = [
 ];
 
 export function BeneficiosAdmin({ cursos, actividades, trigger, open: openProp, onOpenChange }: BeneficiosAdminProps) {
+  const isControlled = openProp !== undefined;
+
   return (
     <Dialog open={openProp} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <button className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}>
-            <Building2 className="size-4" />
-            <span className="hidden sm:inline">Panel administrativo</span>
-          </button>
-        )}
-      </DialogTrigger>
+      {(!isControlled || trigger) && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button size="sm" variant="outline" className="gap-1.5 border-primary/20 bg-card shadow-sm hover:bg-accent">
+              <Building2 className="size-4" /> <span className="hidden sm:inline">Panel administrativo</span>
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

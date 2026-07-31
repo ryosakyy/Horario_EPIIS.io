@@ -32,19 +32,22 @@ export function MisHorarios({
   onRecargar,
   usuarioEmail,
   trigger,
-  open,
+  open: openProp,
   onOpenChange,
 }: MisHorariosProps) {
+  const isControlled = openProp !== undefined;
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-            <History className="size-3.5" />
-            <span className="hidden sm:inline">Mis horarios</span>
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={openProp} onOpenChange={onOpenChange}>
+      {(!isControlled || trigger) && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button variant="outline" size="sm" className="gap-1.5 border-primary/20 bg-card shadow-sm hover:bg-accent">
+              <History className="size-4" />
+              Mis horarios
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
