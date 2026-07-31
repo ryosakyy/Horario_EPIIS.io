@@ -337,29 +337,29 @@ function Constructor() {
                 {modo === "cursos" ? "Cursos" : "Tiempo libre"}
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[320px] p-3 sm:p-4 flex flex-col h-full">
-              <SheetHeader className="shrink-0">
-                <div className="flex items-center justify-between">
-                  <SheetTitle className="text-left text-sm">
-                    {modo === "cursos" ? "Seleccionar cursos" : "Mi tiempo libre"}
-                  </SheetTitle>
+            <SheetContent side="left" className="w-[300px] sm:w-[320px] p-0 flex flex-col overflow-hidden">
+              <div className="flex flex-col h-full overflow-hidden">
+                <div className="shrink-0 px-4 pt-4 pb-2">
+                  <SheetHeader>
+                    <SheetTitle className="text-left text-sm">
+                      {modo === "cursos" ? "Seleccionar cursos" : "Mi tiempo libre"}
+                    </SheetTitle>
+                  </SheetHeader>
+                  <ToggleGroup
+                    type="single"
+                    value={modo}
+                    onValueChange={(v) => v && setModo(v as "cursos" | "personal")}
+                    className="mt-3 grid grid-cols-2 gap-1 rounded-lg border border-border bg-secondary/40 p-1"
+                  >
+                    <ToggleGroupItem value="cursos" className="gap-1 rounded-md text-[10px] sm:text-[11px] data-[state=on]:bg-card data-[state=on]:shadow-sm">
+                      <GraduationCap className="size-3" /> Cursos
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="personal" className="gap-1 rounded-md text-[10px] sm:text-[11px] data-[state=on]:bg-card data-[state=on]:shadow-sm">
+                      <Gamepad2 className="size-3" /> Tiempo libre
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
-              </SheetHeader>
-              <div className="mt-2 flex flex-1 min-h-0 flex-col gap-2 sm:gap-3">
-                <ToggleGroup
-                  type="single"
-                  value={modo}
-                  onValueChange={(v) => v && setModo(v as "cursos" | "personal")}
-                  className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-secondary/40 p-1 shrink-0"
-                >
-                  <ToggleGroupItem value="cursos" className="gap-1 rounded-md text-[10px] sm:text-[11px] data-[state=on]:bg-card data-[state=on]:shadow-sm">
-                    <GraduationCap className="size-3" /> Cursos
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="personal" className="gap-1 rounded-md text-[10px] sm:text-[11px] data-[state=on]:bg-card data-[state=on]:shadow-sm">
-                    <Gamepad2 className="size-3" /> Tiempo libre
-                  </ToggleGroupItem>
-                </ToggleGroup>
-                <div className="min-h-0 flex-1 flex flex-col">
+                <div className="flex-1 min-h-0 px-4 pb-2 overflow-hidden">
                   {modo === "cursos" ? (
                     <SelectorCursos
                       semestre={semestre}
@@ -375,7 +375,7 @@ function Constructor() {
                     />
                   )}
                 </div>
-                <div className="border-t border-border pt-2 space-y-1.5 shrink-0 sm:hidden">
+                <div className="shrink-0 border-t border-border px-4 py-3 space-y-2">
                   {usuario && (
                     <MisHorarios
                       nubeEstado={nubeEstado}
