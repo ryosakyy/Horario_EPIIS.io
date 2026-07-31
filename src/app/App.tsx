@@ -287,6 +287,8 @@ function Constructor() {
     });
   }, [usuario]);
 
+  const [dialogMovil, setDialogMovil] = useState<'exportar' | 'compartir' | 'admin' | 'horarios' | null>(null);
+
   return (
     <div className="min-h-screen bg-background selection:bg-primary/15 selection:text-primary">
       <header className="sticky top-0 z-30 border-b border-border/80 bg-card/90 backdrop-blur-xl">
@@ -356,47 +358,19 @@ function Constructor() {
                     </DropdownMenuLabel>
                   )}
                   {usuario && <DropdownMenuSeparator />}
-                  <ExportarDialog
-                    cursos={cursosConMovimientos}
-                    actividades={actividades}
-                    trigger={
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Download className="size-4 mr-2" /> Exportar horario
-                      </DropdownMenuItem>
-                    }
-                  />
-                  <CompartirDialog
-                    seleccionados={seleccionados}
-                    trigger={
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Share2 className="size-4 mr-2" /> Compartir horario
-                      </DropdownMenuItem>
-                    }
-                  />
-                  <BeneficiosAdmin
-                    cursos={cursosConMovimientos}
-                    actividades={actividades}
-                    trigger={
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Building2 className="size-4 mr-2" /> Panel administrativo
-                      </DropdownMenuItem>
-                    }
-                  />
+                  <DropdownMenuItem onClick={() => setDialogMovil('exportar')}>
+                    <Download className="size-4 mr-2" /> Exportar horario
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setDialogMovil('compartir')}>
+                    <Share2 className="size-4 mr-2" /> Compartir horario
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setDialogMovil('admin')}>
+                    <Building2 className="size-4 mr-2" /> Panel administrativo
+                  </DropdownMenuItem>
                   {usuario && (
-                    <MisHorarios
-                      nubeEstado={nubeEstado}
-                      semestre={semestre}
-                      cantidadCursos={cursos.length}
-                      cantidadActividades={actividades.length}
-                      onForzarGuardado={forzarGuardado}
-                      onRecargar={recargarHorario}
-                      usuarioEmail={usuario.email}
-                      trigger={
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                          <History className="size-4 mr-2" /> Mis horarios
-                        </DropdownMenuItem>
-                      }
-                    />
+                    <DropdownMenuItem onClick={() => setDialogMovil('horarios')}>
+                      <History className="size-4 mr-2" /> Mis horarios
+                    </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -404,6 +378,38 @@ function Constructor() {
           </div>
         </div>
       </header>
+
+      {/* Diálogos controlados para móvil */}
+      <ExportarDialog
+        cursos={cursosConMovimientos}
+        actividades={actividades}
+        open={dialogMovil === 'exportar'}
+        onOpenChange={(o) => setDialogMovil(o ? 'exportar' : null)}
+      />
+      <CompartirDialog
+        seleccionados={seleccionados}
+        open={dialogMovil === 'compartir'}
+        onOpenChange={(o) => setDialogMovil(o ? 'compartir' : null)}
+      />
+      <BeneficiosAdmin
+        cursos={cursosConMovimientos}
+        actividades={actividades}
+        open={dialogMovil === 'admin'}
+        onOpenChange={(o) => setDialogMovil(o ? 'admin' : null)}
+      />
+      {usuario && (
+        <MisHorarios
+          nubeEstado={nubeEstado}
+          semestre={semestre}
+          cantidadCursos={cursos.length}
+          cantidadActividades={actividades.length}
+          onForzarGuardado={forzarGuardado}
+          onRecargar={recargarHorario}
+          usuarioEmail={usuario.email}
+          open={dialogMovil === 'horarios'}
+          onOpenChange={(o) => setDialogMovil(o ? 'horarios' : null)}
+        />
+      )}
 
       <main className="mx-auto grid max-w-[1500px] grid-cols-1 gap-3 px-3 py-3 sm:gap-5 sm:px-6 sm:py-5 md:grid-cols-[240px_minmax(0,1fr)] lg:grid-cols-[320px_minmax(0,1fr)] lg:py-6">
         {/* Mobile sheet trigger */}
@@ -437,7 +443,7 @@ function Constructor() {
                     </ToggleGroupItem>
                   </ToggleGroup>
                 </div>
-                <div className="flex-1 min-h-0 px-4 pb-2 overflow-hidden">
+                <div className="flex-1 min-h-0 px-4 pb-2 overflow-hidden flex flex-col">
                   {modo === "cursos" ? (
                     <SelectorCursos
                       semestre={semestre}

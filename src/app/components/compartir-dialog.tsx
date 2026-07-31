@@ -18,9 +18,15 @@ import { urlCompartir } from "../lib/compartir";
 interface CompartirDialogProps {
   seleccionados: string[];
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function CompartirDialog({ seleccionados, trigger }: CompartirDialogProps) {
+export function CompartirDialog({ seleccionados, trigger, open: openProp, onOpenChange }: CompartirDialogProps) {
+  const [openLocal, setOpenLocal] = useState(false);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : openLocal;
+  const setOpen = isControlled ? (onOpenChange ?? (() => {})) : setOpenLocal;
   const [copiado, setCopiado] = useState(false);
   const isMobile = useIsMobile();
   const url = urlCompartir(seleccionados);
@@ -39,7 +45,7 @@ export function CompartirDialog({ seleccionados, trigger }: CompartirDialogProps
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button size="sm" variant="outline" className="gap-1.5 border-primary/20 bg-card shadow-sm hover:bg-accent">

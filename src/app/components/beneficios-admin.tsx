@@ -19,6 +19,9 @@ import { BloqueActividad } from "../data/actividades";
 interface BeneficiosAdminProps {
   cursos: Curso[];
   actividades: BloqueActividad[];
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const BENEFICIOS = [
@@ -54,9 +57,9 @@ const BENEFICIOS = [
   },
 ];
 
-export function BeneficiosAdmin({ cursos, actividades, trigger }: BeneficiosAdminProps) {
+export function BeneficiosAdmin({ cursos, actividades, trigger, open: openProp, onOpenChange }: BeneficiosAdminProps) {
   return (
-    <Dialog>
+    <Dialog open={openProp} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         {trigger || (
           <button className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}>

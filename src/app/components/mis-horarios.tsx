@@ -19,6 +19,8 @@ interface MisHorariosProps {
   onRecargar: () => void;
   usuarioEmail?: string;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function MisHorarios({
@@ -30,9 +32,11 @@ export function MisHorarios({
   onRecargar,
   usuarioEmail,
   trigger,
+  open,
+  onOpenChange,
 }: MisHorariosProps) {
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="outline" size="sm" className="gap-1.5 text-xs">
