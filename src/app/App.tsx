@@ -617,7 +617,7 @@ function Constructor() {
 
 export default function App() {
   return (
-    <DndProvider backend={TouchBackend} options={{ enableMouseEvents: true }}>
+    <DndProvider backend={TouchBackend} options={{ enableMouseEvents: true, delayTouchStart: 150 }}>
       <BrowserRouter>
         <SesionProvider>
           <AdminProvider>
