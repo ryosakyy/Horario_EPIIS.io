@@ -358,17 +358,17 @@ function Constructor() {
                     </DropdownMenuLabel>
                   )}
                   {usuario && <DropdownMenuSeparator />}
-                  <DropdownMenuItem onClick={() => setDialogMovil('exportar')}>
+                  <DropdownMenuItem onSelect={() => setDialogMovil('exportar')}>
                     <Download className="size-4 mr-2" /> Exportar horario
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setDialogMovil('compartir')}>
+                  <DropdownMenuItem onSelect={() => setDialogMovil('compartir')}>
                     <Share2 className="size-4 mr-2" /> Compartir horario
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setDialogMovil('admin')}>
+                  <DropdownMenuItem onSelect={() => setDialogMovil('admin')}>
                     <Building2 className="size-4 mr-2" /> Panel administrativo
                   </DropdownMenuItem>
                   {usuario && (
-                    <DropdownMenuItem onClick={() => setDialogMovil('horarios')}>
+                    <DropdownMenuItem onSelect={() => setDialogMovil('horarios')}>
                       <History className="size-4 mr-2" /> Mis horarios
                     </DropdownMenuItem>
                   )}
@@ -422,7 +422,7 @@ function Constructor() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[320px] p-0 flex flex-col overflow-hidden">
-              <div className="flex flex-col h-full overflow-hidden">
+              <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
                 <div className="shrink-0 px-4 pt-4 pb-2">
                   <SheetHeader>
                     <SheetTitle className="text-left text-sm">
